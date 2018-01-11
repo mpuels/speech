@@ -34,6 +34,40 @@ Requirements
 * kaldi
 * py-nltools
 
+Run
+
+    $ sudo ./install-debs.sh
+
+to install required .deb packages.
+
+To install py-nltools:
+
+Create the file `/usr/lib/pkgconfig/kaldi-asr.pc` and put the following content
+into it. Modify `kaldi_root` according to your system:
+
+```
+kaldi_root=/kaldi-experiments/kaldi/
+
+Name: kaldi-asr
+Description: kaldi-asr speech recognition toolkit
+Version: 5.2
+Libs: -L${kaldi_root}/tools/openfst/lib -L${kaldi_root}/src/lib -lkaldi-decoder -lkaldi-lat -lkaldi-fstext -lkaldi-hmm -lkaldi-feat -lkaldi-transform -lkaldi-gmm -lkaldi-tree -lkaldi-util -lkaldi-matrix -lkaldi-base -lkaldi-nnet3 -lkaldi-online2 -lkaldi-cudamatrix -lkaldi-ivector -lfst
+Cflags: -I${kaldi_root}/src  -I${kaldi_root}/tools/openfst/include
+```
+
+To install conda env, run
+
+    $ conda env create -f environment.yml
+
+To activate the environment, type
+
+    $ source activate gooofy-speech
+
+To deactivate it, type
+
+    $ source deactivate
+
+
 Setup Notes
 ===========
 
