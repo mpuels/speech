@@ -39,6 +39,8 @@ from nltools.sequiturclient import sequitur_gen_ipa
 from speech_lexicon     import Lexicon
 from speech_transcripts import Transcripts
 
+from util.files import copy_and_fill_template
+
 WORKDIR = 'data/dst/speech/%s/kaldi'
 
 #
@@ -326,7 +328,8 @@ misc.copy_file ('data/src/speech/kaldi-run-lm.sh', '%s/run-lm.sh' % work_dir)
 # misc.copy_file ('data/src/speech/kaldi-run-nnet3.sh', '%s/run-nnet3.sh' % work_dir)
 misc.copy_file ('data/src/speech/kaldi-run-chain.sh', '%s/run-chain.sh' % work_dir)
 misc.copy_file ('data/src/speech/kaldi-cmd.sh', '%s/cmd.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-path.sh', '%s/path.sh' % work_dir)
+#misc.copy_file ('data/src/speech/kaldi-path.sh', '%s/path.sh' % work_dir)
+copy_and_fill_template('data/src/speech/kaldi-path.sh.template', '%s/path.sh' % work_dir, kaldi_root=kaldi_root)
 misc.mkdirs ('%s/conf' % work_dir)
 misc.copy_file ('data/src/speech/kaldi-mfcc.conf', '%s/conf/mfcc.conf' % work_dir)
 misc.copy_file ('data/src/speech/kaldi-mfcc-hires.conf', '%s/conf/mfcc_hires.conf' % work_dir)
