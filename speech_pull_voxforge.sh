@@ -11,6 +11,9 @@ set -e -o pipefail -u
 vf_audiodir_en=$(speechrc_read_param "${HOME}/.speechrc" vf_audiodir_en)
 vf_en=$(dirname ${vf_audiodir_en})
 
+echo "Creating directory ${vf_en}"
+mkdir -p "${vf_en}"
+
 echo "Changing to directory ${vf_en}"
 cd "${vf_en}"
 
@@ -38,6 +41,9 @@ popd
 
 vf_audiodir_de=$(speechrc_read_param "${HOME}/.speechrc" vf_audiodir_de)
 vf_de=$(dirname ${vf_audiodir_de})
+
+echo "Creating directory ${vf_de}"
+mkdir -p "${vf_de}"
 
 echo "Changing to directory ${vf_de}"
 cd "${vf_de}"
