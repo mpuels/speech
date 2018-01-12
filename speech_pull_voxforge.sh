@@ -17,6 +17,8 @@ mkdir -p "${vf_en}"
 echo "Changing to directory ${vf_en}"
 cd "${vf_en}"
 
+echo "Creating directory audio-arc"
+mkdir -p audio-arc
 pushd audio-arc
 
 rm index.*
@@ -48,6 +50,8 @@ mkdir -p "${vf_de}"
 echo "Changing to directory ${vf_de}"
 cd "${vf_de}"
 
+echo "Creating directory audio-arc"
+mkdir -p audio-arc
 pushd audio-arc
 
 rm index.*
