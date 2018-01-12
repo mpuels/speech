@@ -8,7 +8,7 @@ set -e -o pipefail -u
 # english
 #
 
-vf_audiodir_en=$(speechrc_read_param "~/.speechrc" vf_audiodir_en)
+vf_audiodir_en=$(speechrc_read_param "${HOME}/.speechrc" vf_audiodir_en)
 vf_en=$(dirname ${vf_audiodir_en})
 
 echo "Changing to directory ${vf_en}"
@@ -36,7 +36,7 @@ popd
 # german
 #
 
-vf_audiodir_de=$(speechrc_read_param "~/.speechrc" vf_audiodir_de)
+vf_audiodir_de=$(speechrc_read_param "${HOME}/.speechrc" vf_audiodir_de)
 vf_de=$(dirname ${vf_audiodir_de})
 
 echo "Changing to directory ${vf_de}"
