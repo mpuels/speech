@@ -1,10 +1,18 @@
 #!/bin/bash
 
+set -e -o pipefail -u
+
+. lib/speechrc.bash
+
 #
 # english
 #
 
-cd /home/bofh/projects/ai/data/speech/en/voxforge
+vf_audiodir_en=$(speechrc_read_param "~/.speechrc" vf_audiodir_en)
+vf_en=$(dirname ${vf_audiodir_en})
+
+echo "Changing to directory ${vf_en}"
+cd "${vf_en}"
 
 pushd audio-arc
 
@@ -28,7 +36,11 @@ popd
 # german
 #
 
-cd /home/bofh/projects/ai/data/speech/de/voxforge
+vf_audiodir_de=$(speechrc_read_param "~/.speechrc" vf_audiodir_de)
+vf_de=$(dirname ${vf_audiodir_de})
+
+echo "Changing to directory ${vf_de}"
+cd "${vf_de}"
 
 pushd audio-arc
 
@@ -48,4 +60,3 @@ for i in ../audio-arc/*.tgz ; do
 done
 
 popd
-

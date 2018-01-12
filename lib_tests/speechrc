@@ -1,0 +1,47 @@
+[speech]
+vf_login              = mpuels
+
+vf_audiodir_de        = /kaldi-experiments/projects/ai/data/speech/de/voxforge/audio
+vf_contribdir_de      = /kaldi-experiments/projects/ai/data/speech/de/voxforge/audio-contrib
+extrasdir_de          = /kaldi-experiments/projects/ai/data/speech/de/kitchen
+gspv2_dir             = /kaldi-experiments/projects/ai/data/speech/de/gspv2
+
+vf_audiodir_en        = /kaldi-experiments/projects/ai/data/speech/en/voxforge/audio
+extrasdir_en          = /kaldi-experiments/projects/ai/data/speech/en/kitchen
+librivoxdir           = /kaldi-experiments/projects/ai/data/speech/en/lsvf
+
+kaldi_root            = /kaldi-experiments/kaldi
+srilm_root            = /kaldi-experiments/kaldi/tools/srilm
+
+wav16_dir_de          = /kaldi-experiments/projects/ai/data/speech/de/16kHz
+wav16_dir_en          = /kaldi-experiments/projects/ai/data/speech/en/16kHz
+noise_dir             = /kaldi-experiments/projects/ai/data/speech/noise
+
+europarl_de           = /kaldi-experiments/projects/ai/data/corpora/de/europarl-v7.de-en.de
+parole_de             = /kaldi-experiments/projects/ai/data/corpora/de/German Parole Corpus/DE_Parole/
+
+europarl_en           = /kaldi-experiments/projects/ai/data/corpora/en/europarl-v7.de-en.en
+cornell_movie_dialogs = /kaldi-experiments/projects/ai/data/corpora/en/cornell_movie_dialogs_corpus
+web_questions         = /kaldi-experiments/projects/ai/data/corpora/en/WebQuestions
+yahoo_answers         = /kaldi-experiments/projects/ai/data/corpora/en/YahooAnswers
+
+host_asr              = localhost
+port_asr              = 8301
+
+kaldi_model_dir_de    = /kaldi-experiments/projects/ai/speech/data/models/kaldi-nnet3-voxforge-de-latest
+kaldi_model_de        = nnet_tdnn_a
+
+host_getty            = localhost
+port_getty            = 8298
+port_gettyp           = 8299
+
+[db]
+dbserver              = localhost
+dbname                = nlp
+dbuser                = semantics
+dbpass                = ********
+url                   = postgresql://semantics:********@localhost:5432/nlp
+
+[tts]
+host                  = localhost
+port                  = 8300
