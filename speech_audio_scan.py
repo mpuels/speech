@@ -67,9 +67,11 @@ scan_dirs = []
 if lang == 'de':
 
     scan_dirs.append(config.get("speech", "vf_audiodir_de"))
-    scan_dirs.append(config.get("speech", "extrasdir_de"))
-    scan_dirs.append(config.get("speech", "gspv2_dir") + '/train')
-    scan_dirs.append(config.get("speech", "gspv2_dir") + '/dev')
+
+    # Commented out corpora that I haven't downloaded yet.
+    # scan_dirs.append(config.get("speech", "extrasdir_de"))
+    # scan_dirs.append(config.get("speech", "gspv2_dir") + '/train')
+    # scan_dirs.append(config.get("speech", "gspv2_dir") + '/dev')
     # scan_dirs.append(config.get("speech", "gspv2_dir") + '/test')
 
     wav16_dir   = config.get("speech", "wav16_dir_de")
