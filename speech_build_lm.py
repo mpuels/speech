@@ -65,7 +65,9 @@ from speech_transcripts import Transcripts
 WORKDIR = 'data/dst/speech/%s/srilm'
 
 SOURCES = ['data/dst/speech/%s/sentences.txt',
-           'data/dst/speech/%s/ai-sentences.txt']
+           # Don't know how to produce ai-sentences.txt.
+           #'data/dst/speech/%s/ai-sentences.txt'
+           ]
 
 SENTENCES_STATS      = 100000
 
