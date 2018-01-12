@@ -21,7 +21,7 @@ echo "Creating directory audio-arc"
 mkdir -p audio-arc
 pushd audio-arc
 
-rm index.*
+rm -f index.*
 wget -c -r -nd -l 1 -np http://www.repository.voxforge1.org/downloads/SpeechCorpus/Trunk/Audio/Main/16kHz_16bit/
 
 popd
@@ -54,7 +54,7 @@ echo "Creating directory audio-arc"
 mkdir -p audio-arc
 pushd audio-arc
 
-rm index.*
+rm -f index.*
 wget -c -r -nd -l 1 -np http://www.repository.voxforge1.org/downloads/de/Trunk/Audio/Main/16kHz_16bit/
 # rm openpento*
 
