@@ -26,6 +26,9 @@ wget -c -r -nd -l 1 -np http://www.repository.voxforge1.org/downloads/SpeechCorp
 
 popd
 
+echo "Creating directory audio"
+mkdir -p audio
+
 pushd audio
 for i in ../audio-arc/*.tgz ; do
 
@@ -59,6 +62,9 @@ wget -c -r -nd -l 1 -np http://www.repository.voxforge1.org/downloads/de/Trunk/A
 # rm openpento*
 
 popd
+
+echo "Creating directory audio"
+mkdir -p audio
 
 pushd audio
 for i in ../audio-arc/*.tgz ; do
