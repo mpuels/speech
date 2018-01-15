@@ -38,7 +38,6 @@ class TestTranscripts:
 
     def test_when__exclude_missing_wavs_in_dir__is_not_set_then_init_includes_missing_wav_files(self, monkeypatch):
         # given
-        wavs_dir = "test_data/16kHz"
         lang = "de"
         TSDIR_MOCK = "test_data/speech/%s"
         monkeypatch.setattr(mut, 'TSDIR', TSDIR_MOCK)
