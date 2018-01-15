@@ -99,9 +99,11 @@ logging.info ( "loading lexicon...done.")
 
 logging.info ( "loading transcripts...")
 if options.exclude_missing_wavs:
+    logging.info ( "Excluding transcripts from missing wav files.")
     transcripts = Transcripts(lang=options.lang,
                               exclude_missing_wavs_in_dir=wav16_dir)
 else:
+    logging.info( "Including transcripts from missing wav files.")
     transcripts = Transcripts(lang=options.lang)
 ts_all, ts_train, ts_test = transcripts.split(limit=options.debug, add_all=options.add_all)
 logging.info ( "loading transcripts (%d train, %d test) ...done." % (len(ts_train), len(ts_test)))
