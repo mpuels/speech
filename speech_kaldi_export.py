@@ -59,6 +59,10 @@ parser = OptionParser("usage: %prog [options] )")
 
 parser.add_option ("-a", "--add-all", action="store_true", dest="add_all",
                    help="use all transcripts, generate missing words using sequitur g2p")
+parser.add_option ("-e", "--exclude-missing-wavs", action="store_true",
+                   dest="exclude_missing_wavs",
+                   help="Exclude wav files which are in transcriptions*.csv "
+                        "but are not in wav16_dir.")
 parser.add_option ("-d", "--debug", dest="debug", type='int', default=0,
                    help="limit number of transcripts (debug purposes only), default: 0 (unlimited)")
 parser.add_option ("-l", "--lang", dest="lang", type = "str", default='de',
@@ -94,7 +98,11 @@ lex = Lexicon(lang=options.lang)
 logging.info ( "loading lexicon...done.")
 
 logging.info ( "loading transcripts...")
-transcripts = Transcripts(lang=options.lang)
+if options.exclude_missing_wavs:
+    transcripts = Transcripts(lang=options.lang,
+                              exclude_missing_wavs_in_dir=wav16_dir)
+else:
+    transcripts = Transcripts(lang=options.lang)
 ts_all, ts_train, ts_test = transcripts.split(limit=options.debug, add_all=options.add_all)
 logging.info ( "loading transcripts (%d train, %d test) ...done." % (len(ts_train), len(ts_test)))
 
