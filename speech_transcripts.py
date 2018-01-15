@@ -25,6 +25,8 @@
 
 import os
 import codecs
+import glob
+from os.path import basename, join, splitext
 
 from nltools.tokenizer import tokenize
 
@@ -33,7 +35,19 @@ MAXLINES = 100000
  
 class Transcripts(object):
 
-    def __init__(self, lang='de'):
+    def __init__(self, lang='de', exclude_missing_wavs_in_dir=None):
+        """Corresponds to transcripts saved as csv files
+
+        Reads in 'transcripts*.csv' in ('data/src/speech/%s' % lang). If
+        `exclude_missing_wavs_in_dir` is set, then the resulting Transcript
+        object will not contain entries for audio files which are contained
+        in any `transcripts*.csv` but not in directory
+        `exclude_missing_wavs_in_dir`.
+
+        :param lang:
+        :param exclude_missing_wavs_in_dir: Path to directory containing wav
+        files.
+        """
 
         self.lang  = lang
         self.ts    = {}
@@ -76,6 +90,12 @@ class Transcripts(object):
                           'spk'     : spk}
 
                     self.ts[cfn] = v
+
+        if exclude_missing_wavs_in_dir:
+            wav_paths = glob.glob(join(exclude_missing_wavs_in_dir, "*.wav"))
+            wav_keys = set(splitext(basename(w))[0] for w in wav_paths)
+
+            self.ts = {cfn: self.ts[cfn] for cfn in self.ts if cfn in wav_keys}
 
     def keys(self):
         return self.ts.keys()
