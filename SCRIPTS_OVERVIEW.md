@@ -118,12 +118,11 @@ Inputs:
 - `scan_dirs = [config.get("speech", "vf_audiodir_de"), ...]`: Hard coded in
    source code. List of directories containing audio files and corresponding
    transcriptions.
-- `wav16_dir` from `.speechrc`
 - `transcripts = Transcripts('data/src/speech/de/transcripts_*.csv')`
 
 Outputs:
 
-- `trascripts`: Script adds entries for new utterances found in directory
+- `transcripts`: Script adds entries for new utterances found in directory
    `scan_dirs`.
 - `wav16_dir`: Script converts each audio file found in `scan_dirs` and writes
   output to `wav16_dir`.
