@@ -1,9 +1,33 @@
 # Overview of Scripts
 
-- [12review.sh](#12review.sh)
-
 This document contains a short desription of each script contained in this
 directory.
+
+
+## Table of Contents
+
+- [`12review.sh`](#12reviewsh)
+- [`apply_review.py`](#apply_reviewpy)
+- [`auto_review.py`](#auto_reviewpy)
+- [`noisy_gen.py`](#noisy_genpy)
+- [`speech_audio_scan.py`](#speech_audio_scanpy)
+- [`speech_build_lm.py`](#speech_build_lmpy)
+- [`speech_dist.sh`](#speech_distsh)
+- [`speech_editor.py`](#speech_editorpy)
+- [`speech_gender.py`](#speech_genderpy)
+- [`speech_kaldi_export.py`](#speech_kaldi_exportpy)
+- [`speech_lex_edit.py`](#speech_lex_editpy)
+- [`speech_lex_export_espeak.py`](#speech_lex_export_espeakpy)
+- [`speech_lex_missing.py`](#speech_lex_missingpy)
+- [`speech_lex_review.py`](#speech_lex_reviewpy)
+- [`speech_pull_voxforge.sh`](#speech_pull_voxforgesh)
+- [`speech_sentences_de.py`](#speech_sentences_depy)
+- [`speech_sentences_en.py`](#speech_sentences_enpy)
+- [`speech_sequitur_export.py`](#speech_sequitur_exportpy)
+- [`speech_sequitur_train.sh`](#speech_sequitur_trainsh)
+- [`speech_sphinx_export.py`](#speech_sphinx_exportpy)
+- [`speech_stats.py`](#speech_statspy)
+
 
 ## `12review.sh`
 
