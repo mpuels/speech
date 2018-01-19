@@ -4,6 +4,16 @@ This docoument contains notes on experiments conducted with the scripts
 contained in this repository.
 
 
+## Table of Contents
+
+- [Executed Commands](#executed-commands)
+- [Experiments](#experiments)
+  - [Experiment 1: Training with German VoxForge Corpus](#experiment-1-training-with-german-voxforge-corpus)
+- [Possible Pull Requests](#possible-pull-requests)
+- [To be done later](#to-be-done-later)
+- [Inbox](#inbox)
+
+
 ## Executed Commands
 
 Script (needs German Parole Corpus) probably computes machine to predict
