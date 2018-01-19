@@ -19,14 +19,14 @@ datum=`date +%Y%m%d`
 
 AMNAME="kaldi-chain-voxforge-${LANG}-r$datum"
 
-mkdir "$DISTDIR/$AMNAME"
+mkdir -p "$DISTDIR/$AMNAME"
 
 function export_kaldi_chain {
 
     EXPNAME=$1
     GRAPHNAME=$2
 
-    mkdir "$DISTDIR/$AMNAME/$EXPNAME"
+    mkdir -p "$DISTDIR/$AMNAME/$EXPNAME"
 
     cp data/dst/speech/${LANG}/kaldi/exp/nnet3_chain/$EXPNAME/final.mdl                  $DISTDIR/$AMNAME/$EXPNAME/
     cp data/dst/speech/${LANG}/kaldi/exp/nnet3_chain/$EXPNAME/cmvn_opts                  $DISTDIR/$AMNAME/$EXPNAME/ 2>/dev/null 
@@ -41,7 +41,7 @@ function export_kaldi_chain {
 export_kaldi_chain tdnn_sp tdnn_sp/graph
 export_kaldi_chain tdnn_250 tdnn_250/graph
 
-mkdir "$DISTDIR/$AMNAME/extractor"
+mkdir -p "$DISTDIR/$AMNAME/extractor"
 
 cp data/dst/speech/${LANG}/kaldi/exp/nnet3_chain/extractor/final.mat                  "$DISTDIR/$AMNAME/extractor/"
 cp data/dst/speech/${LANG}/kaldi/exp/nnet3_chain/extractor/global_cmvn.stats          "$DISTDIR/$AMNAME/extractor/"
@@ -55,7 +55,7 @@ cp README.md "$DISTDIR/$AMNAME"
 cp LICENSE   "$DISTDIR/$AMNAME"
 cp AUTHORS   "$DISTDIR/$AMNAME"
 
-mkdir "$DISTDIR/$AMNAME/conf"
+mkdir -p "$DISTDIR/$AMNAME/conf"
 cp data/src/speech/kaldi-mfcc.conf        $DISTDIR/$AMNAME/conf/mfcc.conf 
 cp data/src/speech/kaldi-mfcc-hires.conf  $DISTDIR/$AMNAME/conf/mfcc-hires.conf  
 cp data/src/speech/kaldi-online-cmvn.conf $DISTDIR/$AMNAME/conf/online_cmvn.conf
