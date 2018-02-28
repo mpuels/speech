@@ -5,3 +5,19 @@ train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires_comb
 train_data_dir=data/${train_set}_sp_hires_comb
 gmm=tri2b_chain # the gmm for the target data
 lat_dir=exp/nnet3${nnet3_affix}/${gmm}_${train_set}_sp_comb_lats
+
+NOW_FMT="+%Y-%m-%d-%H-%M-%S"
+
+log_begin_end() {
+    local cmd=$1; shift
+    local begin_utc=$1; shift
+
+    local end_utc=$(now_utc)
+
+    echo {\"cmd\": \"${cmd}\", \"begin_utc\": \"${begin_utc}\", \
+\"end_utc\": \"${end_utc}\"}
+}
+
+now_utc() {
+    date -u ${NOW_FMT}
+}

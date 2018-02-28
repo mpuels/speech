@@ -65,6 +65,7 @@ echo
 echo train.py
 echo
 
+chain_train_begin_utc=$(now_utc)
 steps/nnet3/chain/train.py --stage $train_stage \
   --cmd "$decode_cmd" \
   --feat.online-ivector-dir $train_ivector_dir \
@@ -91,21 +92,26 @@ steps/nnet3/chain/train.py --stage $train_stage \
   --tree-dir $tree_dir \
   --lat-dir $lat_dir \
   --dir $dir
+log_begin_end steps/nnet3/chain/train.py ${chain_train_begin_utc}
 
 echo
 echo mkgraph
 echo
 
+mkgraph_begin_utc=$(now_utc)
 utils/mkgraph.sh --self-loop-scale 1.0 data/lang_test $dir $dir/graph
+log_begin_end utils/mkgraph.sh ${mkgraph_begin_utc}
 
 echo
 echo decode
 echo
 
+decode_begin_utc=$(now_utc)
 steps/nnet3/decode.sh --num-threads 1 --nj $nDecodeJobs --cmd "$decode_cmd" \
                       --acwt 1.0 --post-decode-acwt 10.0 \
                       --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
                       --scoring-opts "--min-lmwt 5 " \
                       $dir/graph data/test_hires $dir/decode_test || exit 1;
+log_begin_end steps/nnet3/decode.sh ${decode_begin_utc}
 
 grep WER $dir/decode_test/scoring_kaldi/best_wer >>RESULTS.txt

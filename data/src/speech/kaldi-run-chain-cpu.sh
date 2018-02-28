@@ -73,7 +73,7 @@ utils/prepare_lang.sh data/local/dict "nspc" data/local/lang data/lang
 #
 # make mfcc
 #
-
+make_mfcc_begin_utc=$(now_utc)
 for datadir in train test; do
     utils/fix_data_dir.sh data/$datadir 
     steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$datadir exp/make_mfcc_chain/$datadir $mfccdir || exit 1;
@@ -81,42 +81,56 @@ for datadir in train test; do
     steps/compute_cmvn_stats.sh data/${datadir} exp/make_mfcc_chain/$datadir $mfccdir || exit 1;
     utils/fix_data_dir.sh data/${datadir} # some files fail to get mfcc for many reasons
 done
+log_begin_end make_mfcc ${make_mfcc_begin_utc}
 
 echo
 echo mono0a_chain
 echo
 
+mono0a_chain_begin_utc=$(now_utc)
 steps/train_mono.sh --nj $nJobs --cmd "$train_cmd" \
   data/train data/lang exp/mono0a_chain || exit 1;
+log_begin_end steps/train_mono.sh ${mono0a_chain_begin_utc}
 
 echo
 echo tri1_chain
 echo
 
+tri1_chain_align_si_begin_utc=$(now_utc)
 steps/align_si.sh --nj $nJobs --cmd "$train_cmd" \
   data/train data/lang exp/mono0a_chain exp/mono0a_ali_chain || exit 1;
+log_begin_end "tri1:steps/align_si.sh" ${tri1_chain_align_si_begin_utc}
 
+tri1_train_deltas_begin_utc=$(now_utc)
 steps/train_deltas.sh --cmd "$train_cmd" 2000 10000 \
   data/train data/lang exp/mono0a_ali_chain exp/tri1_chain || exit 1;
+log_begin_end "tri1:steps/train_deltas.sh" ${tri1_train_deltas_begin_utc}
 
 echo
 echo tri2b_chain
 echo
 
+tri2_align_si_begin_utc=$(now_utc)
 steps/align_si.sh --nj $nJobs --cmd "$train_cmd" \
   data/train data/lang exp/tri1_chain exp/tri1_ali_chain || exit 1;
+log_begin_end "tri2:steps/align_si.sh" ${tri2_align_si_begin_utc}
 
+tri2_train_lda_mllt_begin_utc=$(now_utc)
 steps/train_lda_mllt.sh --cmd "$train_cmd" \
   --splice-opts "--left-context=3 --right-context=3" 2500 15000 \
   data/train data/lang exp/tri1_ali_chain exp/tri2b_chain || exit 1;
+log_begin_end "tri2:steps/train_lda_mllt.sh" ${tri2_train_lda_mllt_begin_utc}
 
+tri2_mkgraph_begin_utc=$(now_utc)
 utils/mkgraph.sh data/lang_test \
   exp/tri2b_chain exp/tri2b_chain/graph || exit 1;
+log_begin_end "tri2:utils/mkgraph.sh" ${tri2_mkgraph_begin_utc}
 
 echo
 echo run_ivector_common.sh
 echo
 
+run_ivector_common_begin_utc=$(now_utc)
 local/nnet3/run_ivector_common.sh --stage $stage \
                                   --nj $nJobs \
                                   --min-seg-len $min_seg_len \
@@ -124,12 +138,11 @@ local/nnet3/run_ivector_common.sh --stage $stage \
                                   --gmm $gmm \
                                   --num-threads-ubm $num_threads_ubm \
                                   --nnet3-affix "$nnet3_affix"
-
+log_begin_end local/nnet3/run_ivector_common.sh ${run_ivector_common_begin_utc}
 
 gmm_dir=exp/$gmm
 ali_dir=exp/${gmm}_ali_${train_set}_sp_comb
 lang=data/lang_chain
-
 lores_train_data_dir=data/${train_set}_sp_comb
 
 for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
@@ -155,15 +168,19 @@ else
   nonsilphonelist=$(cat data/lang_chain/phones/nonsilence.csl) || exit 1;
   # Use our special topology... note that later on may have to tune this
   # topology.
+  gen_topo_begin_utc=$(now_utc)
   steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >data/lang_chain/topo
+  log_begin_end steps/nnet3/chain/gen_topo.py ${gen_topo_begin_utc}
 fi
 
 echo
 echo 'Get the alignments as lattices (gives the chain training more freedom).'
 echo
 
+align_fmllr_lats_begin_utc=$(now_utc)
 steps/align_fmllr_lats.sh --nj $nJobs --cmd "$train_cmd" ${lores_train_data_dir} \
     data/lang $gmm_dir $lat_dir
+log_begin_end steps/align_fmllr_lats.sh ${align_fmllr_lats_begin_utc}
 rm $lat_dir/fsts.*.gz # save space
 
 echo
@@ -176,6 +193,9 @@ if [ -f $tree_dir/final.mdl ]; then
   echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
   exit 1;
 fi
+
+build_tree_begin_utc=$(now_utc)
 steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
     --context-opts "--context-width=2 --central-position=1" \
     --cmd "$train_cmd" 4000 ${lores_train_data_dir} data/lang_chain $ali_dir $tree_dir
+log_begin_end steps/nnet3/chain/build_tree.sh ${build_tree_begin_utc}
