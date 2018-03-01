@@ -242,7 +242,7 @@ Outputs:
          - `dict/`
              - `lexicon.txt`: Contains map from word to list of phonemes.
              - `nonsilence_phones.txt`
-             - `silence_phones.txt`: Hard coded entires: `SIL`, `SPN`, and `NSN`.
+             - `silence_phones.txt`: Hard coded entries: `SIL`, `SPN`, and `NSN`.
              - `optional_silence.txt`: Hard coded entry: `SIL`.
              - `extra_questions.txt`: Contains three lines: First contains
                silence phones (`SIL`, `SPN`, and `NSN`). Second has phones
