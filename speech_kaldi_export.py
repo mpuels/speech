@@ -154,8 +154,8 @@ def generate_speech_and_text_corpora(data_dir,
     logging.info("loading transcripts (%d train, %d test) ...done." % (
         len(ts_train), len(ts_test)))
 
-    export_kaldi_data(lang, '%s/train/' % data_dir, ts_train)
-    export_kaldi_data(lang, '%s/test/' % data_dir, ts_test)
+    export_kaldi_data(wav16_dir, lang, '%s/train/' % data_dir, ts_train)
+    export_kaldi_data(wav16_dir, lang, '%s/test/' % data_dir, ts_test)
 
     if add_all:
         # add missing words to dictionary using sequitur.
@@ -172,10 +172,7 @@ def generate_speech_and_text_corpora(data_dir,
     create_training_data_for_language_model(transcripts, utt_dict, data_dir)
 
 
-def export_kaldi_data (options_lang, destdirfn, tsdict):
-
-    global wav16_dir
-
+def export_kaldi_data (wav16_dir, options_lang, destdirfn, tsdict):
     logging.info ( "Exporting to %s..." % destdirfn)
 
     misc.mkdirs(destdirfn)
