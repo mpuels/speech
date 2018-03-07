@@ -21,6 +21,7 @@
 # export speech training data to create a kaldi case
 #
 
+import os
 import os.path
 import sys
 import logging
@@ -86,7 +87,7 @@ def main():
         speech_data_root = config.get("speech",
                                       "speech_data_root_%s" % options.lang)
 
-        copy_files_for_regression_test(work_dir, speech_data_root)
+        copy_files_for_regression_test(data_dir, work_dir, speech_data_root)
 
 
 def parse_args():
@@ -405,7 +406,7 @@ def copy_scripts_and_config_files(work_dir, kaldi_root):
                    '%s/local/nnet3/run_ivector_common.sh' % work_dir)
 
 
-def copy_files_for_regression_test(work_dir, speech_data_root_en):
+def copy_files_for_regression_test(data_dir, work_dir, speech_data_root_en):
     copy_and_fill_template(
         'data/src/speech/kaldi-mini-librispeech-path.sh.template',
         '%s/mini-librispeech-path.sh' % work_dir,
@@ -413,6 +414,10 @@ def copy_files_for_regression_test(work_dir, speech_data_root_en):
 
     misc.copy_file('data/src/speech/kaldi-get-mini-librispeech.sh',
                    '%s/get-mini-librispeech.sh' % work_dir)
+
+    os.rmdir('%s/local/dict' % data_dir)
+    misc.symlink('dict_nosp', '%s/local/dict' % data_dir)
+
 
 
 if __name__ == "__main__":
