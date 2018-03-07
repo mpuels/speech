@@ -21,6 +21,7 @@
 # export speech training data to create a kaldi case
 #
 
+import os.path
 import sys
 import logging
 
@@ -42,8 +43,6 @@ misc.init_app ('speech_kaldi_export')
 
 
 def main():
-    config = misc.load_config('.speechrc')
-
     (options, args) = parse_args()
 
     if options.verbose:
@@ -53,6 +52,8 @@ def main():
 
     if options.regression_test and options.lang != "en":
         raise ValueError("The flag --regression-test requires --lang=en.")
+
+    config = load_config(options.config)
 
     #
     # config
@@ -71,15 +72,21 @@ def main():
 
     if options.regression_test:
         augment_work_dir_with_mini_librispeech(kaldi_root, work_dir)
-
-    generate_speech_and_text_corpora(data_dir,
-                                     mfcc_dir,
-                                     options.debug,
-                                     options.add_all,
-                                     options.lang,
-                                     options.exclude_missing_wavs)
+    else:
+        generate_speech_and_text_corpora(data_dir,
+                                         mfcc_dir,
+                                         options.debug,
+                                         options.add_all,
+                                         options.lang,
+                                         options.exclude_missing_wavs)
 
     copy_scripts_and_config_files(work_dir, kaldi_root)
+
+    if options.regression_test:
+        speech_data_root = config.get("speech",
+                                      "speech_data_root_%s" % options.lang)
+
+        copy_files_for_regression_test(work_dir, speech_data_root)
 
 
 def parse_args():
@@ -102,10 +109,23 @@ def parse_args():
                            "directory. The script can be used to download a mini "
                            "version of the LibriSpeech corpus from openslr.org. "
                            "The option only works with --lang=en.")
+    parser.add_option("-c", "--config", dest="config", type="str",
+                      default="~/.speechrc",
+                      help="Path to config file. Default: %default")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                       help="enable verbose logging")
 
     return parser.parse_args()
+
+
+def load_config(config_path):
+    config_path_ = os.path.expanduser(config_path)
+
+    logging.info("Loading config file %s" % config_path_)
+    config = misc.configparser.ConfigParser({})
+    config.read(config_path_)
+
+    return config
 
 
 def create_basic_work_dir_structure(data_dir, wav16_dir, mfcc_dir, work_dir,
@@ -121,9 +141,8 @@ def create_basic_work_dir_structure(data_dir, wav16_dir, mfcc_dir, work_dir,
 def augment_work_dir_with_mini_librispeech(kaldi_root, work_dir):
     misc.symlink('%s/egs/mini_librispeech/s5/local' % kaldi_root,
                  '%s/local_minilibrispeech' % work_dir)
-    # TODO Create symlink: data/train -> data/train_clean_5
-    # TODO Create symlink: data/test -> data/dev_clean_2
-    # ? TODO Create symlink: local_minilibrispeech/data_prep -> ${kaldi_root}/egs/librispeech/s5/local/data_prep.sh
+    misc.symlink('train_clean_5', '%s/data/train' % work_dir)
+    misc.symlink('dev_clean_2', '%s/data/test' % work_dir)
 
 
 def generate_speech_and_text_corpora(data_dir,
@@ -384,6 +403,16 @@ def copy_scripts_and_config_files(work_dir, kaldi_root):
     misc.mkdirs('%s/local/nnet3' % work_dir)
     misc.copy_file('data/src/speech/kaldi-run-ivector-common.sh',
                    '%s/local/nnet3/run_ivector_common.sh' % work_dir)
+
+
+def copy_files_for_regression_test(work_dir, speech_data_root_en):
+    copy_and_fill_template(
+        'data/src/speech/kaldi-mini-librispeech-path.sh.template',
+        '%s/mini-librispeech-path.sh' % work_dir,
+        speech_data_root_en=speech_data_root_en)
+
+    misc.copy_file('data/src/speech/kaldi-get-mini-librispeech.sh',
+                   '%s/get-mini-librispeech.sh' % work_dir)
 
 
 if __name__ == "__main__":
