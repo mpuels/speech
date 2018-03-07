@@ -416,9 +416,13 @@ def copy_files_for_regression_test(data_dir, work_dir, speech_data_root_en):
                    '%s/get-mini-librispeech.sh' % work_dir)
 
     path_local_dict = '%s/local/dict' % data_dir
-    if os.path.isdir(path_local_dict):
+    if not os.path.exists(path_local_dict):
+        misc.symlink('dict_nosp', path_local_dict)
+    if os.path.islink(path_local_dict):
+        pass
+    elif os.path.isdir(path_local_dict):
         os.rmdir(path_local_dict)
-    misc.symlink('dict_nosp', '%s/local/dict' % data_dir)
+        misc.symlink('dict_nosp', path_local_dict)
 
 
 
