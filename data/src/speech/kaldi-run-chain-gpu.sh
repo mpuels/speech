@@ -1,5 +1,6 @@
-if [ -f kaldi-run-chain-cfg.sh ]; then
-    . kaldi-run-chain-cfg.sh
+
+if [ -f run-chain-cfg.sh ]; then
+    . run-chain-cfg.sh
 else
     echo "missing kaldi-run-chain-cfg.sh"
     exit 1
