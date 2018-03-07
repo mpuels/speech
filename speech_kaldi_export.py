@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*- 
 
 #
@@ -21,15 +21,10 @@
 # export speech training data to create a kaldi case
 #
 
-import os
 import sys
 import logging
-import readline
-import atexit
-import traceback
 
 from optparse import OptionParser
-from StringIO import StringIO
 
 from nltools                import misc
 from nltools.tokenizer      import tokenize
@@ -43,89 +38,141 @@ from util.files import copy_and_fill_template
 
 WORKDIR = 'data/dst/speech/%s/kaldi'
 
-#
-# init 
-#
-
 misc.init_app ('speech_kaldi_export')
 
-config = misc.load_config ('.speechrc')
 
-#
-# commandline parsing
-#
+def main():
+    config = misc.load_config('.speechrc')
 
-parser = OptionParser("usage: %prog [options] )")
+    (options, args) = parse_args()
 
-parser.add_option ("-a", "--add-all", action="store_true", dest="add_all",
-                   help="use all transcripts, generate missing words using sequitur g2p")
-parser.add_option ("-e", "--exclude-missing-wavs", action="store_true",
-                   dest="exclude_missing_wavs",
-                   help="Exclude wav files which are in transcriptions*.csv "
-                        "but are not in wav16_dir.")
-parser.add_option ("-d", "--debug", dest="debug", type='int', default=0,
-                   help="limit number of transcripts (debug purposes only), default: 0 (unlimited)")
-parser.add_option ("-l", "--lang", dest="lang", type = "str", default='de',
-                   help="language (default: de)")
-parser.add_option ("-v", "--verbose", action="store_true", dest="verbose",
-                   help="enable verbose logging")
+    if options.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
-(options, args) = parser.parse_args()
+    if options.regression_test and options.lang != "en":
+        raise ValueError("The flag --regression-test requires --lang=en.")
 
-if options.verbose:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
+    #
+    # config
+    #
 
-#
-# config
-#
+    work_dir = WORKDIR % options.lang
+    kaldi_root = config.get("speech", "kaldi_root")
 
-work_dir    = WORKDIR %options.lang 
-kaldi_root  = config.get("speech", "kaldi_root")
+    data_dir = "%s/data" % work_dir
+    mfcc_dir = "%s/mfcc" % work_dir
 
-data_dir    = "%s/data" % work_dir
-mfcc_dir    = "%s/mfcc" % work_dir
+    wav16_dir = config.get("speech", "wav16_dir_%s" % options.lang)
 
-wav16_dir   = config.get("speech", "wav16_dir_%s" % options.lang)
+    create_basic_work_dir_structure(data_dir, wav16_dir, mfcc_dir, work_dir,
+                                    kaldi_root)
 
-#
-# load lexicon, transcripts
-#
+    if options.regression_test:
+        augment_work_dir_with_mini_librispeech(kaldi_root, work_dir)
 
-logging.info ( "loading lexicon...")
-lex = Lexicon(lang=options.lang)
-logging.info ( "loading lexicon...done.")
+    generate_speech_and_text_corpora(data_dir,
+                                     mfcc_dir,
+                                     options.debug,
+                                     options.add_all,
+                                     options.lang,
+                                     options.exclude_missing_wavs)
 
-logging.info ( "loading transcripts...")
-if options.exclude_missing_wavs:
-    logging.info ( "Excluding transcripts of missing wav files.")
-    transcripts = Transcripts(lang=options.lang,
-                              exclude_missing_wavs_in_dir=wav16_dir)
-else:
-    logging.info( "Including transcripts of missing wav files.")
-    transcripts = Transcripts(lang=options.lang)
-ts_all, ts_train, ts_test = transcripts.split(limit=options.debug, add_all=options.add_all)
-logging.info ( "loading transcripts (%d train, %d test) ...done." % (len(ts_train), len(ts_test)))
-
-#
-# create work_dir structure
-#
+    copy_scripts_and_config_files(work_dir, kaldi_root)
 
 
-misc.mkdirs('%s/lexicon' % data_dir)
-misc.mkdirs('%s/local/dict' % data_dir)
-misc.mkdirs(wav16_dir)
-misc.mkdirs(mfcc_dir)
+def parse_args():
+    parser = OptionParser("usage: %prog [options] )")
+    parser.add_option("-a", "--add-all", action="store_true", dest="add_all",
+                      help="use all transcripts, generate missing words using sequitur g2p")
+    parser.add_option("-e", "--exclude-missing-wavs", action="store_true",
+                      dest="exclude_missing_wavs",
+                      help="Exclude wav files which are in transcriptions*.csv "
+                           "but are not in wav16_dir.")
+    parser.add_option("-d", "--debug", dest="debug", type='int', default=0,
+                      help="limit number of transcripts (debug purposes only), default: 0 (unlimited)")
+    parser.add_option("-l", "--lang", dest="lang", type="str", default='de',
+                      help="language (default: de)")
+    parser.add_option("-r", "--regression-test", action="store_true",
+                      dest="regression_test",
+                      help="Is intended for regression testing of bash scripts. "
+                           "If set, then the script get-mini-librispeech.sh and "
+                           "its depdencies will be placed into the target "
+                           "directory. The script can be used to download a mini "
+                           "version of the LibriSpeech corpus from openslr.org. "
+                           "The option only works with --lang=en.")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+                      help="enable verbose logging")
 
-misc.symlink('%s/egs/wsj/s5/steps' % kaldi_root, '%s/steps' % work_dir)
-misc.symlink('%s/egs/wsj/s5/utils' % kaldi_root, '%s/utils' % work_dir)
+    return parser.parse_args()
 
-#
-# kaldi data part
-#
 
-def export_kaldi_data (destdirfn, tsdict):
+def create_basic_work_dir_structure(data_dir, wav16_dir, mfcc_dir, work_dir,
+                                    kaldi_root):
+    misc.mkdirs('%s/lexicon' % data_dir)
+    misc.mkdirs('%s/local/dict' % data_dir)
+    misc.mkdirs(wav16_dir)
+    misc.mkdirs(mfcc_dir)
+    misc.symlink('%s/egs/wsj/s5/steps' % kaldi_root, '%s/steps' % work_dir)
+    misc.symlink('%s/egs/wsj/s5/utils' % kaldi_root, '%s/utils' % work_dir)
+
+
+def augment_work_dir_with_mini_librispeech(kaldi_root, work_dir):
+    misc.symlink('%s/egs/mini_librispeech/s5/local' % kaldi_root,
+                 '%s/local_minilibrispeech' % work_dir)
+    # TODO Create symlink: data/train -> data/train_clean_5
+    # TODO Create symlink: data/test -> data/dev_clean_2
+    # ? TODO Create symlink: local_minilibrispeech/data_prep -> ${kaldi_root}/egs/librispeech/s5/local/data_prep.sh
+
+
+def generate_speech_and_text_corpora(data_dir,
+                                     wav16_dir,
+                                     debug,
+                                     add_all,
+                                     lang,
+                                     exclude_missing_wavs):
+    """Generates files in data/local/dict and """
+    #
+    # load lexicon, transcripts
+    #
+    logging.info("loading lexicon...")
+    lex = Lexicon(lang=lang)
+    logging.info("loading lexicon...done.")
+    logging.info("loading transcripts...")
+    if exclude_missing_wavs:
+        logging.info("Excluding transcripts of missing wav files.")
+        transcripts = Transcripts(lang=lang,
+                                  exclude_missing_wavs_in_dir=wav16_dir)
+    else:
+        logging.info("Including transcripts of missing wav files.")
+        transcripts = Transcripts(lang=lang)
+
+    ts_all, ts_train, ts_test = transcripts.split(limit=debug,
+                                                  add_all=add_all)
+
+    logging.info("loading transcripts (%d train, %d test) ...done." % (
+        len(ts_train), len(ts_test)))
+
+    export_kaldi_data(lang, '%s/train/' % data_dir, ts_train)
+    export_kaldi_data(lang, '%s/test/' % data_dir, ts_test)
+
+    if add_all:
+        # add missing words to dictionary using sequitur.
+        lex = add_missing_words(transcripts, lex)
+    ps, utt_dict = export_dictionary(ts_all,
+                                     lex,
+                                     '%s/local/dict/lexicon.txt' % data_dir)
+    write_nonsilence_phones(
+        ps, '%s/local/dict/nonsilence_phones.txt' % data_dir)
+
+    write_silence_phones('%s/local/dict/silence_phones.txt' % data_dir)
+    write_optional_silence('%s/local/dict/optional_silence.txt' % data_dir)
+    write_extra_questions(ps, '%s/local/dict/extra_questions.txt' % data_dir)
+    create_training_data_for_language_model(transcripts, utt_dict, data_dir)
+
+
+def export_kaldi_data (options_lang, destdirfn, tsdict):
 
     global wav16_dir
 
@@ -146,35 +193,24 @@ def export_kaldi_data (destdirfn, tsdict):
 
             utt2spkf.write('%s %s\n' % (utt_id, ts['spk']))
 
-    misc.copy_file ('data/src/speech/%s/spk2gender' % options.lang, '%s/spk2gender' % destdirfn)
-
-export_kaldi_data('%s/train/' % data_dir, ts_train)
-export_kaldi_data('%s/test/'  % data_dir, ts_test)
+    misc.copy_file ('data/src/speech/%s/spk2gender' % options_lang,
+                    '%s/spk2gender' % destdirfn)
 
 
-#
-# add missing words to dictionary using sequitur, if add_all is set
-#
-
-if options.add_all:
-
-    logging.info ( "looking for missing words..." )
-
-    missing = {} # word -> count
-
+def add_missing_words(transcripts, lex):
+    logging.info("looking for missing words...")
+    missing = {}  # word -> count
     num = len(transcripts)
     cnt = 0
-
     for cfn in transcripts:
         ts = transcripts[cfn]
 
         cnt += 1
 
-        if ts['quality']>0:
+        if ts['quality'] > 0:
             continue
 
         for word in tokenize(ts['prompt']):
-
             if word in lex:
                 continue
 
@@ -182,182 +218,178 @@ if options.add_all:
                 missing[word] += 1
             else:
                 missing[word] = 1
-
     cnt = 0
     for item in reversed(sorted(missing.items(), key=lambda x: x[1])):
+        lex_base = item[0]
 
-        lex_base = item[0] 
+        ipas = sequitur_gen_ipa(lex_base)
 
-        ipas = sequitur_gen_ipa (lex_base)
-
-        logging.info ( u"%5d/%5d Adding missing word : %s [ %s ]" % (cnt, len(missing), item[0], ipas) )
+        logging.info(u"%5d/%5d Adding missing word : %s [ %s ]" % (
+        cnt, len(missing), item[0], ipas))
 
         lex_entry = {'ipa': ipas}
         lex[lex_base] = lex_entry
         cnt += 1
-        
+
+    return lex
 
 
-#
-# dictionary export
-#
+def export_dictionary(ts_all, lex, dictfn2):
+    logging.info("Exporting dictionary...")
+    utt_dict = {}
+    for ts in ts_all:
 
-dictfn2 = '%s/local/dict/lexicon.txt' % data_dir
+        tsd = ts_all[ts]
 
-logging.info ( "Exporting dictionary..." )
+        tokens = tsd['ts'].split(' ')
 
-utt_dict = {}
+        # logging.info ( '%s %s' % (repr(ts), repr(tokens)) )
 
-for ts in ts_all:
+        for token in tokens:
+            if token in utt_dict:
+                continue
 
-    tsd = ts_all[ts]
+            if not token in lex.dictionary:
+                logging.error(
+                    "*** ERROR: missing token in dictionary: '%s' (tsd=%s, tokens=%s)" % (
+                    token, repr(tsd), repr(tokens)))
+                sys.exit(1)
 
-    tokens = tsd['ts'].split(' ')
+            utt_dict[token] = lex.dictionary[token]['ipa']
+    ps = {}
+    with open(dictfn2, 'w') as dictf:
 
-    # logging.info ( '%s %s' % (repr(ts), repr(tokens)) )
+        dictf.write('!SIL SIL\n')
 
-    for token in tokens:
-        if token in utt_dict:
-            continue
+        for token in sorted(utt_dict):
 
-        if not token in lex.dictionary:
-            logging.error ( "*** ERROR: missing token in dictionary: '%s' (tsd=%s, tokens=%s)" % (token, repr(tsd), repr(tokens)) )
-            sys.exit(1)
+            ipa = utt_dict[token]
+            xsr = ipa2xsampa(token, ipa, spaces=True)
 
-        utt_dict[token] = lex.dictionary[token]['ipa']
+            xs = (xsr.replace('-', '')
+                     .replace('\' ', '\'')
+                     .replace('  ', ' ')
+                     .replace('#', 'nC'))
 
-ps = {}
+            dictf.write((u'%s %s\n' % (token, xs)).encode('utf8'))
 
-with open (dictfn2, 'w') as dictf:
+            for p in xs.split(' '):
 
-    dictf.write('!SIL SIL\n')
+                if len(p) < 1:
+                    logging.error(
+                        u"****ERROR: empty phoneme in : '%s' ('%s', ipa: '%s')" % (
+                        xs, xsr, ipa))
 
-    for token in sorted(utt_dict):
+                pws = p[1:] if p[0] == '\'' else p
 
-        ipa = utt_dict[token]
-        xsr = ipa2xsampa (token, ipa, spaces=True)
+                if not pws in ps:
+                    ps[pws] = {p}
+                else:
+                    ps[pws].add(p)
+    logging.info("%s written." % dictfn2)
+    logging.info("Exporting dictionary ... done.")
 
-        xs = xsr.replace('-','').replace('\' ', '\'').replace('  ', ' ').replace('#', 'nC')
+    return ps, utt_dict
 
-        dictf.write((u'%s %s\n' % (token, xs)).encode('utf8'))
 
-        for p in xs.split(' '):
+def write_nonsilence_phones(ps, psfn):
+    with open(psfn, 'w') as psf:
+        for pws in ps:
+            for p in sorted(list(ps[pws])):
+                psf.write((u'%s ' % p).encode('utf8'))
 
-            if len(p)<1:
-                logging.error ( u"****ERROR: empty phoneme in : '%s' ('%s', ipa: '%s')" % (xs, xsr, ipa) )
+            psf.write('\n')
+    logging.info('%s written.' % psfn)
 
-            pws = p[1:] if p[0] == '\'' else p
 
-            if not pws in ps:
-                ps[pws] = set([p])
-            else:
-                ps[pws].add(p)
+def write_silence_phones(psfn):
+    with open(psfn, 'w') as psf:
+        psf.write('SIL\nSPN\nNSN\n')
+    logging.info('%s written.' % psfn)
 
-logging.info ( "%s written." % dictfn2 )
 
-logging.info ( "Exporting dictionary ... done." )
+def write_optional_silence(psfn):
+    with open(psfn, 'w') as psf:
+        psf.write('SIL\n')
+    logging.info('%s written.' % psfn)
 
-#
-# phoneme sets
-#
 
-# logging.info ( "Phoneme set: %s" % repr(ps) )
+def write_extra_questions(ps, psfn):
+    with open(psfn, 'w') as psf:
+        psf.write('SIL SPN NSN\n')
 
-psfn = '%s/local/dict/nonsilence_phones.txt' % data_dir
-with open(psfn, 'w') as psf:
-    for pws in ps:
-        for p in sorted(list(ps[pws])):
-            psf.write((u'%s ' % p).encode('utf8'))
-
+        for pws in ps:
+            for p in ps[pws]:
+                if '\'' in p:
+                    continue
+                psf.write((u'%s ' % p).encode('utf8'))
         psf.write('\n')
 
-logging.info ( '%s written.' % psfn )
+        for pws in ps:
+            for p in ps[pws]:
+                if not '\'' in p:
+                    continue
+                psf.write((u'%s ' % p).encode('utf8'))
 
-psfn = '%s/local/dict/silence_phones.txt' % data_dir
-with open(psfn, 'w') as psf:
-    psf.write('SIL\nSPN\nNSN\n')
-logging.info ( '%s written.' % psfn )
+        psf.write('\n')
+    logging.info('%s written.' % psfn)
 
-psfn = '%s/local/dict/optional_silence.txt' % data_dir
-with open(psfn, 'w') as psf:
-    psf.write('SIL\n')
-logging.info ( '%s written.' % psfn )
 
-psfn = '%s/local/dict/extra_questions.txt' % data_dir
-with open(psfn, 'w') as psf:
-    psf.write('SIL SPN NSN\n')
+def create_training_data_for_language_model(transcripts, utt_dict, data_dir):
+    misc.mkdirs('%s/local/lm' % data_dir)
+    fn = '%s/local/lm/train_nounk.txt' % data_dir
+    with open(fn, 'w') as f:
 
-    for pws in ps:
-        for p in ps[pws]:
-            if '\'' in p:
-                continue
-            psf.write((u'%s ' % p).encode('utf8'))
-    psf.write('\n')
+        for utt_id in sorted(transcripts):
+            ts = transcripts[utt_id]
+            f.write((u'%s\n' % ts['ts']).encode('utf8'))
+    logging.info("%s written." % fn)
+    fn = '%s/local/lm/wordlist.txt' % data_dir
+    with open(fn, 'w') as f:
 
-    for pws in ps:
-        for p in ps[pws]:
-            if not '\'' in p:
-                continue
-            psf.write((u'%s ' % p).encode('utf8'))
+        for token in sorted(utt_dict):
+            f.write((u'%s\n' % token).encode('utf8'))
+    logging.info("%s written." % fn)
 
-    psf.write('\n')
 
-logging.info ( '%s written.' % psfn )
+def copy_scripts_and_config_files(work_dir, kaldi_root):
+    misc.copy_file('data/src/speech/kaldi-run-lm.sh', '%s/run-lm.sh' % work_dir)
+    # misc.copy_file ('data/src/speech/kaldi-run-am.sh', '%s/run-am.sh' % work_dir)
+    # misc.copy_file ('data/src/speech/kaldi-run-nnet3.sh', '%s/run-nnet3.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain.sh',
+                   '%s/run-chain.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain-wrapper.sh',
+                   '%s/run-chain-wrapper.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain-cfg.sh',
+                   '%s/run-chain-cfg.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain-cpu.sh',
+                   '%s/run-chain-cpu.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain-cpu-wrapper.sh',
+                   '%s/run-chain-cpu-wrapper.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain-gpu.sh',
+                   '%s/run-chain-gpu.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-chain-gpu-wrapper.sh',
+                   '%s/run-chain-gpu-wrapper.sh' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-cmd.sh', '%s/cmd.sh' % work_dir)
+    # misc.copy_file ('data/src/speech/kaldi-path.sh', '%s/path.sh' % work_dir)
+    copy_and_fill_template('data/src/speech/kaldi-path.sh.template',
+                           '%s/path.sh' % work_dir, kaldi_root=kaldi_root)
+    misc.mkdirs('%s/conf' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-mfcc.conf',
+                   '%s/conf/mfcc.conf' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-mfcc-hires.conf',
+                   '%s/conf/mfcc_hires.conf' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-online-cmvn.conf',
+                   '%s/conf/online_cmvn.conf' % work_dir)
+    misc.mkdirs('%s/local' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-score.sh',
+                   '%s/local/score.sh' % work_dir)
+    misc.mkdirs('%s/local/nnet3' % work_dir)
+    misc.copy_file('data/src/speech/kaldi-run-ivector-common.sh',
+                   '%s/local/nnet3/run_ivector_common.sh' % work_dir)
 
-#
-# language model
-#
 
-misc.mkdirs ('%s/local/lm' % data_dir)
-
-fn = '%s/local/lm/train_nounk.txt' % data_dir
-
-with open(fn, 'w') as f:
-    
-    for utt_id in sorted(transcripts):
-        ts = transcripts[utt_id]
-        f.write((u'%s\n' % ts['ts']).encode('utf8'))
-
-logging.info ( "%s written." % fn )
-
-fn = '%s/local/lm/wordlist.txt' % data_dir
-
-with open(fn, 'w') as f:
-    
-    for token in sorted(utt_dict):
-        f.write((u'%s\n' % token).encode('utf8'))
-
-logging.info ( "%s written." % fn )
-
-#
-# copy scripts and config files
-#
-
-misc.copy_file ('data/src/speech/kaldi-run-lm.sh', '%s/run-lm.sh' % work_dir)
-# misc.copy_file ('data/src/speech/kaldi-run-am.sh', '%s/run-am.sh' % work_dir)
-# misc.copy_file ('data/src/speech/kaldi-run-nnet3.sh', '%s/run-nnet3.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain.sh', '%s/run-chain.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain-wrapper.sh', '%s/run-chain-wrapper.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain-cfg.sh', '%s/run-chain-cfg.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain-cpu.sh', '%s/run-chain-cpu.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain-cpu-wrapper.sh', '%s/run-chain-cpu-wrapper.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain-gpu.sh', '%s/run-chain-gpu.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-chain-gpu-wrapper.sh', '%s/run-chain-gpu-wrapper.sh' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-cmd.sh', '%s/cmd.sh' % work_dir)
-#misc.copy_file ('data/src/speech/kaldi-path.sh', '%s/path.sh' % work_dir)
-copy_and_fill_template('data/src/speech/kaldi-path.sh.template', '%s/path.sh' % work_dir, kaldi_root=kaldi_root)
-misc.mkdirs ('%s/conf' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-mfcc.conf', '%s/conf/mfcc.conf' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-mfcc-hires.conf', '%s/conf/mfcc_hires.conf' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-online-cmvn.conf', '%s/conf/online_cmvn.conf' % work_dir)
-misc.mkdirs ('%s/local' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-score.sh', '%s/local/score.sh' % work_dir)
-misc.mkdirs ('%s/local/nnet3' % work_dir)
-misc.copy_file ('data/src/speech/kaldi-run-ivector-common.sh', '%s/local/nnet3/run_ivector_common.sh' % work_dir)
-
-#
-# main
-#
-
-logging.info ( "All done." )
+if __name__ == "__main__":
+    main()
+    logging.info ( "All done." )
 
