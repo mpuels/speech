@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 
 if [ -f run-chain-cfg.sh ]; then
     . run-chain-cfg.sh
