@@ -424,6 +424,9 @@ def copy_files_for_regression_test(data_dir, work_dir, speech_data_root_en):
         os.rmdir(path_local_dict)
         misc.symlink('dict_nosp', path_local_dict)
 
+    path_data_lang_test = '%s/lang_test' % data_dir
+    if not os.path.exists(path_data_lang_test):
+        misc.symlink('lang_nosp_test_tgsmall', path_data_lang_test)
 
 
 if __name__ == "__main__":
