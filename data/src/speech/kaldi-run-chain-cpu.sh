@@ -67,8 +67,7 @@ echo "Runtime configuration is: nJobs $nJobs, nDecodeJobs $nDecodeJobs. If this 
 rm -rf data/lang
 
 # Prepare phoneme data for Kaldi
-# utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
-utils/prepare_lang.sh data/local/dict "nspc" data/local/lang data/lang
+utils/prepare_lang.sh data/local/dict $(get_oov_symbol) data/local/lang data/lang
 
 #
 # make mfcc

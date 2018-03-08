@@ -21,3 +21,13 @@ log_begin_end() {
 now_utc() {
     date -u ${NOW_FMT}
 }
+
+get_oov_symbol() {
+    local lang=$(basename $(dirname "${PWD}"))
+
+    case "$lang" in
+        de) echo "nspc";;
+        en) echo "<UNK>";;
+        *) echo "Unknown language ${lang}"; exit 1;;
+    esac
+}
