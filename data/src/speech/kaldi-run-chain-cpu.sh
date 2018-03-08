@@ -182,7 +182,8 @@ if [ $stage -le 8 ]; then
                                       --train-set $train_set \
                                       --gmm $gmm \
                                       --num-threads-ubm $num_threads_ubm \
-                                      --nnet3-affix "$nnet3_affix"
+                                      --nnet3-affix "$nnet3_affix" \
+        || exit 1
     log_begin_end local/nnet3/run_ivector_common.sh \
                   ${run_ivector_common_begin_utc}
 fi
