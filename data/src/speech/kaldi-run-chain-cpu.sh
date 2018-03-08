@@ -47,6 +47,8 @@ if [ -f path.sh ]; then
 
 fi
 
+. utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
+
 # At this script level we don't support not running on GPU, as it would be painfully slow.
 # If you want to run without GPU you'd have to call train_tdnn.sh with --gpu false,
 # --num-threads 16 and --minibatch-size 128.

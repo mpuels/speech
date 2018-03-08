@@ -13,6 +13,8 @@ if [ -f cmd.sh ]; then
          echo "missing cmd.sh"; exit 1;
 fi
 
+. utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
+
 dir=exp/nnet3${nnet3_affix}/tdnn_sp
 train_stage=-10
 common_egs_dir=  # you can set this to use previously dumped egs.
