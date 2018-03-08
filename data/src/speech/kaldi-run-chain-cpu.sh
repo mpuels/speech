@@ -29,7 +29,7 @@ xent_regularize=0.1
 if [ -f run-chain-cfg.sh ]; then
     . run-chain-cfg.sh
 else
-    echo "missing kaldi-run-chain-cfg.sh"
+    echo "missing run-chain-cfg.sh"
     exit 1
 fi
 
