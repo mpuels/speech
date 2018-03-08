@@ -174,7 +174,7 @@ if [ $stage -le 8 ]; then
     echo
 
     run_ivector_common_begin_utc=$(now_utc)
-    local/nnet3/run_ivector_common.sh --stage $stage \
+    local/nnet3/run_ivector_common.sh --stage 0 \
                                       --nj $nJobs \
                                       --min-seg-len $min_seg_len \
                                       --train-set $train_set \
