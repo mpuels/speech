@@ -187,6 +187,11 @@ if [ $stage -le 8 ]; then
                   ${run_ivector_common_begin_utc}
 fi
 
+gmm_dir=exp/$gmm
+ali_dir=exp/${gmm}_ali_${train_set}_sp_comb
+lang=data/lang_chain
+lores_train_data_dir=data/${train_set}_sp_comb
+
 for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
     $lores_train_data_dir/feats.scp $ali_dir/ali.1.gz; do
   [ ! -f $f ] && echo "$0: expected file $f to exist" && exit 1
@@ -217,11 +222,6 @@ if [ $stage -le 9 ]; then
         log_begin_end steps/nnet3/chain/gen_topo.py ${gen_topo_begin_utc}
     fi
 fi
-
-gmm_dir=exp/$gmm
-ali_dir=exp/${gmm}_ali_${train_set}_sp_comb
-lang=data/lang_chain
-lores_train_data_dir=data/${train_set}_sp_comb
 
 if [ $stage -le 10 ]; then
     echo
