@@ -70,7 +70,13 @@ if [ $stage -le 0 ]; then
     rm -rf data/lang
 
     # Prepare phoneme data for Kaldi
-    utils/prepare_lang.sh data/local/dict $(get_oov_symbol) data/local/lang data/lang
+    prepare_lang_begin_utc=$(now_utc)
+    utils/prepare_lang.sh \
+        data/local/dict \
+        $(get_oov_symbol) \
+        data/local/lang data/lang \
+        || exit 1
+    log_begin_end prepare_lang ${prepare_lang_begin_utc}
 fi
 
 #

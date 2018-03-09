@@ -70,8 +70,10 @@ if [ $stage -le 1 ]; then
         # Use our special topology... note that later on may have to tune this
         # topology.
         gen_topo_begin_utc=$(now_utc)
-        steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist \
-                                      > data/lang_chain/topo
+        steps/nnet3/chain/gen_topo.py $nonsilphonelist \
+                                      $silphonelist \
+                                      > data/lang_chain/topo \
+            || exit 1
         log_begin_end steps/nnet3/chain/gen_topo.py ${gen_topo_begin_utc}
     fi
 fi
@@ -86,7 +88,8 @@ if [ $stage -le 2 ]; then
                               ${lores_train_data_dir} \
                               data/lang \
                               $gmm_dir \
-                              $lat_dir
+                              $lat_dir \
+        || exit 1
     log_begin_end steps/align_fmllr_lats.sh ${align_fmllr_lats_begin_utc}
     rm $lat_dir/fsts.*.gz # save space
 fi
@@ -108,7 +111,11 @@ if [ $stage -le 3 ]; then
         --frame-subsampling-factor 3 \
         --context-opts "--context-width=2 --central-position=1" \
         --cmd "$train_cmd" \
-        4000 ${lores_train_data_dir} data/lang_chain $ali_dir $tree_dir
+        4000 \
+        ${lores_train_data_dir} \
+        data/lang_chain \
+        $ali_dir $tree_dir \
+        || exit 1
     log_begin_end steps/nnet3/chain/build_tree.sh ${build_tree_begin_utc}
 fi
 
@@ -157,7 +164,8 @@ output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_ra
 EOF
     steps/nnet3/xconfig_to_configs.py \
         --xconfig-file $dir/configs/network.xconfig \
-        --config-dir $dir/configs/
+        --config-dir $dir/configs/ \
+        || exit 1
 
     echo
     echo train.py
@@ -189,7 +197,8 @@ EOF
                                --feat-dir $train_data_dir \
                                --tree-dir $tree_dir \
                                --lat-dir $lat_dir \
-                               --dir $dir
+                               --dir $dir \
+        || exit 1
     log_begin_end steps/nnet3/chain/train.py ${chain_train_begin_utc}
 fi
 
@@ -199,7 +208,8 @@ if [ $stage -le 5 ]; then
     echo
 
     mkgraph_begin_utc=$(now_utc)
-    utils/mkgraph.sh --self-loop-scale 1.0 data/lang_test $dir $dir/graph
+    utils/mkgraph.sh --self-loop-scale 1.0 data/lang_test $dir $dir/graph \
+        || exit 1
     log_begin_end utils/mkgraph.sh ${mkgraph_begin_utc}
 fi
 
