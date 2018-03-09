@@ -172,32 +172,33 @@ EOF
     echo
 
     chain_train_begin_utc=$(now_utc)
-    steps/nnet3/chain/train.py --stage $nnet3_train_stage \
-                               --cmd "$decode_cmd" \
-                               --feat.online-ivector-dir $train_ivector_dir \
-                               --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
-                               --chain.xent-regularize 0.1 \
-                               --chain.leaky-hmm-coefficient 0.1 \
-                               --chain.l2-regularize 0.00005 \
-                               --chain.apply-deriv-weights false \
-                               --chain.lm-opts="--num-extra-lm-states=2000" \
-                               --egs.dir "$common_egs_dir" \
-                               --egs.opts "--frames-overlap-per-eg 0" \
-                               --egs.chunk-width 150 \
-                               --trainer.num-chunk-per-minibatch 128 \
-                               --trainer.frames-per-iter 1500000 \
-                               --trainer.num-epochs 4 \
-                               --trainer.optimization.proportional-shrink 20 \
-                               --trainer.optimization.num-jobs-initial 1 \
-                               --trainer.optimization.num-jobs-final 1 \
-                               --trainer.optimization.initial-effective-lrate 0.001 \
-                               --trainer.optimization.final-effective-lrate 0.0001 \
-                               --trainer.max-param-change 2.0 \
-                               --cleanup.remove-egs true \
-                               --feat-dir $train_data_dir \
-                               --tree-dir $tree_dir \
-                               --lat-dir $lat_dir \
-                               --dir $dir \
+    steps/nnet3/chain/train.py \
+        --stage $nnet3_train_stage \
+        --cmd "$decode_cmd" \
+        --feat.online-ivector-dir $train_ivector_dir \
+        --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
+        --chain.xent-regularize 0.1 \
+        --chain.leaky-hmm-coefficient 0.1 \
+        --chain.l2-regularize 0.00005 \
+        --chain.apply-deriv-weights false \
+        --chain.lm-opts="--num-extra-lm-states=2000" \
+        --egs.dir "$common_egs_dir" \
+        --egs.opts "--frames-overlap-per-eg 0" \
+        --egs.chunk-width 150 \
+        --trainer.num-chunk-per-minibatch 128 \
+        --trainer.frames-per-iter 1500000 \
+        --trainer.num-epochs 4 \
+        --trainer.optimization.proportional-shrink 20 \
+        --trainer.optimization.num-jobs-initial 1 \
+        --trainer.optimization.num-jobs-final 1 \
+        --trainer.optimization.initial-effective-lrate 0.001 \
+        --trainer.optimization.final-effective-lrate 0.0001 \
+        --trainer.max-param-change 2.0 \
+        --cleanup.remove-egs true \
+        --feat-dir $train_data_dir \
+        --tree-dir $tree_dir \
+        --lat-dir $lat_dir \
+        --dir $dir \
         || exit 1
     log_begin_end steps/nnet3/chain/train.py ${chain_train_begin_utc}
 fi
