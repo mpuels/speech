@@ -13,6 +13,13 @@ if [ -f cmd.sh ]; then
          echo "missing cmd.sh"; exit 1;
 fi
 
+# Path also sets LC_ALL=C for Kaldi, otherwise you will experience strange (and hard to debug!) bugs. It should be set here, after the python scripts and not at the beginning of this script
+if [ -f path.sh ]; then
+    . path.sh
+else
+    echo "missing path.sh"; exit 1;
+fi
+
 stage=0
 dir=exp/nnet3${nnet3_affix}/tdnn_sp
 nnet3_train_stage=-10
