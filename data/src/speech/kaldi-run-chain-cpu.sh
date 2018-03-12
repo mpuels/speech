@@ -22,7 +22,6 @@ mfccdir=mfcc_chain
 
 stage=0
 min_seg_len=1.55
-num_threads_ubm=12
 
 xent_regularize=0.1
 

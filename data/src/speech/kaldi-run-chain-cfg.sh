@@ -5,6 +5,7 @@ train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires_comb
 train_data_dir=data/${train_set}_sp_hires_comb
 gmm=tri2b_chain # the gmm for the target data
 lat_dir=exp/nnet3${nnet3_affix}/${gmm}_${train_set}_sp_comb_lats
+num_threads_ubm=12
 
 NOW_FMT="+%Y-%m-%d-%H-%M-%S"
 
