@@ -19,11 +19,13 @@ for part in dev-clean-2 train-clean-5; do
         $SPEECH_DATA_ROOT $data_url $part
 done
 
-# TODO Download language model to other directory than data/local/lm
-#      and copy it on demand to data/local/lm instead of downloading it
-#      after a run of speech_kaldi_export.py.
 if [ $stage -le 0 ]; then
-    local_minilibrispeech/download_lm.sh $lm_url data/local/lm
+    libri_lm_dir=../librispeech-lm/data/local/lm
+    mkdir -p ${libri_lm_dir}
+    local_minilibrispeech/download_lm.sh $lm_url ${libri_lm_dir}
+    if ! [ -L data/local/lm ]; then
+        ln -s ../../${libri_lm_dir} data/local/lm
+    fi
 fi
 
 # TODO Only execute the following block if it hasn't been executed before.
