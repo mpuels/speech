@@ -23,6 +23,7 @@ fi
 stage=0
 dir=exp/nnet3${nnet3_affix}/tdnn_sp
 nnet3_train_stage=-10
+min_seg_len=1.55
 common_egs_dir=  # you can set this to use previously dumped egs.
 
 . utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
