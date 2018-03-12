@@ -23,7 +23,6 @@ mfccdir=mfcc_chain
 stage=0
 min_seg_len=1.55
 
-xent_regularize=0.1
 
 if [ -f run-chain-cfg.sh ]; then
     . run-chain-cfg.sh
