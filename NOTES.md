@@ -130,6 +130,44 @@ repo. But `speech_audio_scan.py` sets quality to 0 when regenerating
 `transcripts_00.csv` based on the VoxForge corpus.
 
 
+## Regression Test for Scripts that Train an ASR System
+
+Precondition: The CPU and GPU machines on AWS have already been provisioned with
+the scripts contained in https://github.com/mpuels/mh-kaldi-on-aws .
+
+Start the CPU machine on AWS with the scripts contained in
+https://github.com/mpuels/mh-kaldi-on-aws
+
+    local$ cd PATH_TO_KALDI_ON_AWS/rc-ec2
+    local$ ./ec2_ctl.py cpu
+    local$ vagrant ssh cpu
+
+On the CPU machine, download the audio data and language models and
+start the training.
+
+    cpu$ screen # CTRL-A CTRL-D to detach from screen, '$ screen -r' to resume.
+    cpu$ source activate gooofy-speech-cpu
+    cpu$ cd /kaldi-experiments/speech
+    cpu$ ./speech_kaldi_export.py --lang=en --regression-test
+    cpu$ cd data/dst/speech/en/kaldi
+    cpu$ ./get-mini-librispeech.sh
+    cpu$ ./run-chain-cpu-wrapper.sh
+
+Wait until script has completed. Then stop the CPU machine and start the GPU
+machine with
+
+    local$ cd PATH_TO_KALDI_ON_AWS/rc-ec2
+    local$ ./ec2_ctl.py gpu
+    local$ vagrant ssh gpu
+
+On the GPU machine, finish the training of the acoustic model with
+
+    gpu$ screen
+    gpu$ source activate tensorflow_p27
+    gpu$ cd /kaldi-experiments/speech/data/dst/speech/en/kaldi
+    gpu$ ./run-chain-gpu-wrapper.sh
+
+
 ## Experiments
 
 ### Experiment 1: Training with German VoxForge Corpus
